@@ -1,0 +1,129 @@
+#include <graphics.h>
+#include <conio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <algorithm>  // Include this if you want to use min and max
+
+void drawSpokes(int x, int y, int radius, float angle) {
+    for (int i = 0; i < 8; i++) {
+        int spokeX = x + radius * cos(angle + i * M_PI / 4);
+        int spokeY = y + radius * sin(angle + i * M_PI / 4);
+        line(x, y, spokeX, spokeY);
+    }
+}
+
+void drawCycle(int x, int y, float angle) {
+    int wheelRadius = 20;
+    int wheelDistance = 50;
+
+    // Draw wheels with spokes
+    setcolor(BLUE);
+    circle(x, y, wheelRadius);    // Rear wheel
+    drawSpokes(x, y, wheelRadius, angle);
+
+    circle(x + wheelDistance, y, wheelRadius); // Front wheel
+    drawSpokes(x + wheelDistance, y, wheelRadius, angle);
+
+    // Frame
+    setcolor(GREEN);
+    line(x, y, x + 25, y - 30);          // Rear to top frame
+    line(x + wheelDistance, y, x + 25, y - 30); // Front to top frame
+    line(x + 25, y - 30, x + 35, y - 45);       // Top frame to handle
+    line(x + 10, y - 15, x + 40, y - 15);       // Horizontal frame
+
+    // Handle
+    setcolor(YELLOW);
+    line(x + wheelDistance, y, x + 60, y - 20); // Handle bar
+    line(x + 60, y - 20, x + 50, y - 25);       // Handle grip
+
+    // Pedals with rotating effect
+    int pedalX1 = x + 25 + 10 * cos(angle);
+    int pedalY1 = y + 10 * sin(angle);
+    int pedalX2 = x + 25 - 10 * cos(angle);
+    int pedalY2 = y - 10 * sin(angle);
+
+    setcolor(RED);
+    line(pedalX1, pedalY1, pedalX2, pedalY2); // Pedal line
+    circle(pedalX1, pedalY1, 3);              // Pedal 1
+    circle(pedalX2, pedalY2, 3);              // Pedal 2
+}
+
+void drawBackground(int offset) {
+    setcolor(WHITE);
+
+    // Draw clouds
+    for (int i = 0; i < 3; i++) {
+        int cloudX = (offset + i * 150) % getmaxx();
+        int cloudY = 50;
+        ellipse(cloudX, cloudY, 0, 360, 30, 15);
+        ellipse(cloudX + 30, cloudY, 0, 360, 30, 15);
+        ellipse(cloudX - 30, cloudY, 0, 360, 30, 15);
+    }
+
+    // Draw trees
+    for (int i = 0; i < 3; i++) {
+        int treeX = (offset + i * 200) % getmaxx();
+        int treeY = 300;
+        setcolor(BROWN);
+        rectangle(treeX, treeY, treeX + 10, treeY - 30);
+        setcolor(GREEN);
+        circle(treeX + 5, treeY - 40, 15);
+        circle(treeX - 10, treeY - 35, 15);
+        circle(treeX + 20, treeY - 35, 15);
+    }
+}
+
+void drawGround(int offset) {
+    setcolor(WHITE);
+    for (int i = 0; i < getmaxx(); i += 40) {
+        int lineX = (i + offset) % getmaxx();
+        line(lineX, 350, lineX + 20, 350);
+    }
+}
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+
+    int x = 0;            // Initial position of the cycle on the x-axis
+    int y = 300;          // Position of the cycle on the y-axis
+    float angle = 0;      // Initial angle for rotating spokes and pedals
+    int speed = 10;       // Initial speed of the cycle
+    int offset = 0;       // Offset for moving background elements
+
+    while (!kbhit()) {    // Press any key to stop
+        cleardevice();    // Clear the screen
+
+        // Background elements
+        drawBackground(offset);
+
+        // Moving ground to simulate road
+        drawGround(offset);
+
+        // Draw the cycle with rotating wheels and pedals
+        drawCycle(x, y, angle);
+
+        delay(50); // Delay to control the animation speed
+
+        // Update position and rotation angle
+        x += speed;
+        angle += 0.1;
+        offset += speed / 2; // Background moves slower than cycle
+
+        // Reset cycle position to loop
+        if (x > getmaxx() + 50) {
+            x = -100;
+        }
+
+        // Speed control with arrow keys
+        if (GetAsyncKeyState(VK_RIGHT)) {
+            speed = (speed + 1 > 20) ? 20 : speed + 1; // Increase speed
+        } else if (GetAsyncKeyState(VK_LEFT)) {
+            speed = (speed - 1 < 5) ? 5 : speed - 1;    // Decrease speed
+        }
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}
